@@ -1,0 +1,177 @@
+
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>David Michael Brown</title>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background: #000;
+      color: #fff;
+    }
+
+    #canvas {
+      image-rendering: pixelated;
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #controls {
+      font: 14px/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, "Liberation Mono", "Courier New", monospace;
+      position: absolute;
+      left: 50%;
+      bottom: 10vh;
+      transform: translateX(-50%);
+      background: rgba(#fff, 0.1);
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+
+    #controls input,
+    #controls select {
+      background: #111;
+      color: #fff;
+      border: 1px solid #333;
+      padding: 4px
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="controls"></div>
+
+  <script>
+    window.document.addEventListener("DOMContentLoaded",()=>{function e(e,t,i){return e<t?t:e>i?i:e}function t(e,t,i){return e+(t-e)*i}function i(e){return e*Math.PI/180}function a(e){return 180*e/Math.PI}let n={ramp:{type:"text",label:"Ramp",default:" ░▒▓█",size:3},cell:{type:"number",label:"Cell",default:16,min:4,max:64,step:1},text:{type:"text",label:"Text",default:"~mtwilliams",size:6},sourceTextSize:{type:"number",label:"Source Text (px)",default:54,min:4,max:1024,step:1},sourceTextWidth:{type:"number",label:"Source Text Width",default:384,min:16,max:4096,step:1},sourceTextHeight:{type:"number",label:"Source Text Height",default:256,min:16,max:4096,step:1},maxYaw:{type:"number",label:"Max Yaw (deg)",default:30,min:0,max:180,step:.01},maxPitch:{type:"number",label:"Max Pitch (deg)",default:30,min:0,max:180,step:.01},speed:{type:"number",label:"Speed",default:.1,min:0,max:1,step:.01},fov:{type:"number",label:"FOV",default:900,min:0,max:1800,step:1},depth:{type:"number",label:"Depth",default:2.2,min:0,max:10,step:.01},ambient:{type:"number",label:"Ambient",default:.25,min:0,max:1,step:.01},diffuse:{type:"number",label:"Diffuse",default:.9,min:0,max:1,step:.01}},r={};for(let[l,o]of Object.entries(n))r[l]=o.default;let u=canvas.getContext("webgl2",{premultipliedAlpha:!1}),m=u.createVertexArray();u.bindVertexArray(m);let d={};for(let[c,f]of Object.entries({draw:{vertex:vs.textContent.trim(),fragment:fs.textContent.trim()}})){let E=[];for(let[$,h]of Object.entries({[u.VERTEX_SHADER]:f.vertex,[u.FRAGMENT_SHADER]:f.fragment})){let T=u.createShader($);u.shaderSource(T,h),u.compileShader(T),E[$]=T}for(let s of Object.values(E))if(!u.getShaderParameter(s,u.COMPILE_STATUS))throw u.getShaderInfoLog(s);let x=u.createProgram();for(let p of(u.createShader(u.VERTEX_SHADER,f.vertex),Object.values(E)))u.attachShader(x,p);u.linkProgram(x),d[c]=x}for(let[g,R]of Object.entries(d))if(!u.getProgramParameter(R,u.linkStatus||u.LINK_STATUS))throw Error(`Failed to link "${g}": ${u.getProgramInfoLog(R)}`);let b={};for(let[_,w]of Object.entries(d)){b[_]={};let S=u.getProgramParameter(w,u.ACTIVE_UNIFORMS);for(let A=0;A<S;A++){let v=u.getActiveUniform(w,A),D=u.getUniformLocation(w,v.name);b[_][v.name]={location:D,type:v.type,size:v.size}}}let U=d.draw;function P(e={width:256,height:256}){let t=document.createElement("canvas");return t.width=e.width,t.height=e.height,t}function y(e={}){let t=u.createTexture();return u.bindTexture(u.TEXTURE_2D,t),u.texParameteri(u.TEXTURE_2D,u.TEXTURE_MIN_FILTER,e.linear?u.LINEAR:u.NEAREST),u.texParameteri(u.TEXTURE_2D,u.TEXTURE_MAG_FILTER,e.linear?u.LINEAR:u.NEAREST),u.texParameteri(u.TEXTURE_2D,u.TEXTURE_WRAP_S,e.clamp?u.CLAMP_TO_EDGE:u.REPEAT),u.texParameteri(u.TEXTURE_2D,u.TEXTURE_WRAP_T,e.clamp?u.CLAMP_TO_EDGE:u.REPEAT),t}u.useProgram(U);let L=y({linear:!0,clamp:!0});function N(e){let t=P({width:r.sourceTextWidth,height:r.sourceTextHeight}),i=t.getContext("2d");return i.fillStyle="#000",i.fillRect(0,0,t.width,t.height),i.fillStyle="#fff",i.textAlign="center",i.textBaseline="middle",i.font=`${r.sourceTextSize}px Times New Roman, Georgia, serif`,i.filter="blur(0.6px)",i.fillText(e,t.width/2,t.height/2),i.filter="none",t}let I=L;u.activeTexture(u.TEXTURE0),u.bindTexture(u.TEXTURE_2D,I),u.uniform1i(b.draw.uSrc.location,0),u.texImage2D(u.TEXTURE_2D,0,u.RGBA,u.RGBA,u.UNSIGNED_BYTE,N(r.text));function X(e,t=64){let i=e.length,a=document.createElement("canvas");a.width=t*i,a.height=t;let n=a.getContext("2d");n.clearRect(0,0,a.width,a.height),n.fillStyle="#000",n.fillRect(0,0,a.width,a.height),n.fillStyle="#fff",n.textAlign="center",n.textBaseline="middle",n.font=`${.9*t}px ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", "Noto Sans Mono", monospace`;for(let r=0;r<i;r++)n.fillText(e[r],r*t+t/2,.54*t);return a}let C=r.ramp,B=y({linear:!0,clamp:!0});u.activeTexture(u.TEXTURE1),u.bindTexture(u.TEXTURE_2D,B),u.uniform1i(b.draw.uAtlas.location,1),u.texImage2D(u.TEXTURE_2D,0,u.RGBA,u.RGBA,u.UNSIGNED_BYTE,X(C)),u.disable(u.DEPTH_TEST),u.enable(u.BLEND),u.blendFuncSeparate(u.SRC_ALPHA,u.ONE_MINUS_SRC_ALPHA,u.ONE,u.ONE_MINUS_SRC_ALPHA),b.draw.uSrc.location,b.draw.uAtlas.location;let G=b.draw.uRes.location,M=b.draw.uCell.location,H=b.draw.uFov.location,O=b.draw.uYawPitch.location,Y=b.draw.uDepth.location,z=b.draw.uAmbient.location,F=b.draw.uDiffuse.location,k=b.draw.uGlyphCount.location;function V(){let e=Math.max(1,Math.min(window.devicePixelRatio||1,2)),t=Math.floor((canvas.clientWidth||window.innerWidth)*e),i=Math.floor((canvas.clientHeight||window.innerHeight)*e);canvas.width!==t||canvas.height!==i?(canvas.width=t,canvas.height=i,u.viewport(0,0,t,i),u.uniform2f(G,t,i),j()):u.uniform2f(G,t,i)}function W(){u.activeTexture(u.TEXTURE1),u.bindTexture(u.TEXTURE_2D,B),u.texImage2D(u.TEXTURE_2D,0,u.RGBA,u.RGBA,u.UNSIGNED_BYTE,X(r.ramp)),u.uniform1i(k,r.ramp.length)}function j(){u.activeTexture(u.TEXTURE0),u.bindTexture(u.TEXTURE_2D,I),u.texImage2D(u.TEXTURE_2D,0,u.RGBA,u.RGBA,u.UNSIGNED_BYTE,N(r.text))}V(),window.addEventListener("resize",V),W(),j();let K=0,q=0,J=0,Q=0;canvas.addEventListener("mousemove",e=>{let t=canvas.getBoundingClientRect(),i=(e.clientX-t.left)/t.width,a=(e.clientY-t.top)/t.height;K=(.5-i)*2*r.maxYaw,q=(.5-a)*2*r.maxPitch}),canvas.addEventListener("touchmove",e=>{let t=canvas.getBoundingClientRect(),i=(e.touches[0].clientX-t.left)/t.width,a=(e.touches[0].clientY-t.top)/t.height;K=(.5-i)*2*r.maxYaw,q=(.5-a)*2*r.maxPitch});let Z=[performance.now()];function ee(){let e=performance.now();Z[Z.length-1],Z.push(e),Z.length>60&&Z.shift();let a=Z.map((e,t)=>t>0?e-Z[t-1]:0),n=a.reduce((e,t)=>e+t,0)/a.length/1e3,l=r.speed*(n/.016666666666666666);u.uniform1f(H,r.fov),u.uniform1f(Y,r.depth),u.uniform1f(z,r.ambient),u.uniform1f(F,r.diffuse),J=t(J,K,l),Q=t(Q,q,l),u.viewport(0,0,canvas.width,canvas.height),u.clearColor(0,0,0,1),u.clear(u.COLOR_BUFFER_BIT),u.uniform2f(O,i(J),i(Q)),u.uniform1f(M,Math.max(4,Math.min(64,+r.cell||16))),u.uniform1i(k,C.length),u.drawArrays(u.TRIANGLES,0,6),requestAnimationFrame(ee)}function et(){j(),W()}function ei(t,i,a){return n=>{t[i]=(t=>{switch(a.type){case"boolean":return t.checked;case"integer":{let i=parseInt(t.value);return isNaN(i)?a.default:e(i,a.min,a.max)}case"number":{let n=parseFloat(t.value);return isNaN(n)?a.default:e(n,a.min,a.max)}case"text":return t.value}})(n.target)}}requestAnimationFrame(ee);let ea=new URLSearchParams(window.location.search);if("1"===ea.get("debug"))for(let[en,er]of Object.entries(n)){let el=document.createElement("input");switch(er.type){case"boolean":el.type="checkbox",el.checked=r[en];break;case"integer":case"number":el.type="number",el.value=r[en],void 0!==er.min&&(el.min=er.min),void 0!==er.max&&(el.max=er.max),void 0!==er.step&&(el.step=er.step);break;default:el.type="text",el.value=r[en],er.size&&(el.size=er.size)}let eo=ei(r,en,er);el.addEventListener("input",eo),el.addEventListener("change",eo),el.addEventListener("input",et),el.addEventListener("change",et),controls.appendChild(document.createTextNode(`${er.label}: `)),controls.appendChild(el)}});
+  </script>
+
+  <script id="vs" type="text/plain">
+    #version 300 es
+    precision highp float;
+    const vec2 verts[6]=vec2[6](
+      vec2(-1.,-1.), vec2(1.,-1.), vec2(1.,1.),
+      vec2(-1.,-1.), vec2(1.,1.), vec2(-1.,1.)
+    );
+    out vec2 vUv;
+    void main(){
+      vec2 p=verts[gl_VertexID];
+      vUv = p*0.5+0.5;
+      gl_Position = vec4(p,0.,1.);
+    }
+  </script>
+
+  <script id="fs" type="text/glsl">
+    #version 300 es
+    precision highp float;
+    in vec2 vUv; out vec4 frag;
+
+    uniform sampler2D uSrc;        // source text alpha (white on black)
+    uniform sampler2D uAtlas;      // glyph atlas (N tiles horizontally)
+    uniform vec2 uRes;             // canvas size (pixels)
+    uniform float uCell;           // cell size (pixels)
+    uniform float uFov;            // focal length
+    uniform vec2 uYawPitch;        // radians
+    uniform float uDepth;          // Sobel normal z weight
+    uniform float uAmbient, uDiffuse;
+    uniform int uGlyphCount;
+
+    vec2 projectToSrc(vec2 fragPx){
+      float yaw=uYawPitch.x, pitch=uYawPitch.y;
+      float cp=cos(pitch), sp=sin(pitch);
+      float cy=cos(yaw),   sy=sin(yaw);
+
+      // screen center to world (pixels as world units)
+      vec2 c = fragPx - 0.5*uRes;
+      float X=c.x, Y=c.y, Z=0.0;
+
+      // pitch
+      float Y1 =  Y*cp - Z*sp;
+      float Z1 =  Y*sp + Z*cp;
+      float X1 =  X;
+
+      // yaw
+      float X2 =  X1*cy + Z1*sy;
+      float Z2 = -X1*sy + Z1*cy;
+      float Y2 =  Y1;
+
+      float f = uFov;
+      float u = (f * X2) / (f - Z2);
+      float v = (f * Y2) / (f - Z2);
+
+      vec2 srcPx = vec2(u,v) + 0.5*uRes;
+      return srcPx / uRes; // 0..1
+    }
+
+    float alphaAt(vec2 uv){ return texture(uSrc, vec2(uv.x, 1.0 - uv.y)).r; }
+
+    // perf(mtwilliams): gather4
+    // sobel filter in source texel space
+    float sobelX(vec2 uv, vec2 texel){
+      float a00=alphaAt(uv+texel*vec2(-1,-1));
+      float a10=alphaAt(uv+texel*vec2( 0,-1));
+      float a20=alphaAt(uv+texel*vec2( 1,-1));
+      float a01=alphaAt(uv+texel*vec2(-1, 0));
+      float a21=alphaAt(uv+texel*vec2( 1, 0));
+      float a02=alphaAt(uv+texel*vec2(-1, 1));
+      float a12=alphaAt(uv+texel*vec2( 0, 1));
+      float a22=alphaAt(uv+texel*vec2( 1, 1));
+      return (a20 + 2.0*a21 + a22) - (a00 + 2.0*a01 + a02);
+    }
+    float sobelY(vec2 uv, vec2 texel){
+      float a00=alphaAt(uv+texel*vec2(-1,-1));
+      float a10=alphaAt(uv+texel*vec2( 0,-1));
+      float a20=alphaAt(uv+texel*vec2( 1,-1));
+      float a02=alphaAt(uv+texel*vec2(-1, 1));
+      float a12=alphaAt(uv+texel*vec2( 0, 1));
+      float a22=alphaAt(uv+texel*vec2( 1, 1));
+      return (a02 + 2.0*a12 + a22) - (a00 + 2.0*a10 + a20);
+    }
+
+    void main(){
+      // compute which cell we're in and local coords in that cell
+      vec2 fragPx = vUv * uRes;
+      vec2 cellPx = floor(fragPx / uCell);      // integer cell
+      vec2 local  = fract(fragPx / uCell);      // 0..1 inside cell
+
+      // sample rotated source at the *cell center* (stable glyph choice)
+      vec2 centerPx = (cellPx + 0.5) * uCell;
+      vec2 srcUv = projectToSrc(centerPx);
+      vec2 texel = 1.0 / uRes;
+
+      // coverage for fade-out + sobel for faux normal
+      float a11 = alphaAt(srcUv);
+      float gx = sobelX(srcUv, texel);
+      float gy = sobelY(srcUv, texel);
+
+      // normal & lighting
+      vec3 n = normalize(vec3(-gx, -gy, uDepth));
+      // light from slight opposite of tilt
+      vec3 L = normalize(vec3(-uYawPitch.x, -uYawPitch.y - 0.4, 1.0));
+      float I = (uAmbient + uDiffuse * max(0.0, dot(n, L))) * a11;
+
+      // ramp index
+      float idxF = clamp(floor(I * float(uGlyphCount-1) + 0.5), 0.0, float(uGlyphCount-1));
+      int idx = int(idxF);
+
+      // sample glyph atlas (tiles horizontally: 0..N-1)
+      float tileW = 1.0 / float(uGlyphCount);
+      vec2 atlasUV = vec2( tileW*float(idx) + local.x*tileW, 1.0 - local.y );
+
+      float gA = texture(uAtlas, atlasUV).r; // glyph luminance as alpha
+      float alpha = gA;
+      alpha *= a11; // extra softness
+
+      //if (alpha < 0.01) discard;
+      frag = vec4(vec3(1.0), alpha);
+    }
+  </script>
+
+</body>
+
+</html>
